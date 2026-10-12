@@ -34,21 +34,19 @@ def test_vi_review_keeps_unknown_linkage_null():
 
 
 def test_download_external_data_uses_fake_loader_and_limits_rows(tmp_path):
-    class DatasetDict(dict):
-        @property
-        def column_names(self):
-            return {key: [] for key in self}
+    calls = []
 
-    def loader(name):
+    def loader(name, *, split=None, streaming=False):
+        calls.append((name, split, streaming))
         if "recipe" in name.lower():
-            return DatasetDict(train=[
+            return [
                 {"title": "A", "ingredients": ["x"], "directions": ["y"]},
                 {"title": "B", "ingredients": [], "directions": []},
-            ])
-        return DatasetDict(train=[
+            ]
+        return [
             {"review_id": "r1", "review": "Ngon", "sentiment": "positive"},
             {"review_id": "r2", "review": "Tệ", "sentiment": "negative"},
-        ])
+        ]
 
     recipe_path, review_path = download_external_data(
         output_dir=tmp_path,
@@ -62,3 +60,4 @@ def test_download_external_data_uses_fake_loader_and_limits_rows(tmp_path):
     assert len(reviews) == 1
     assert recipes[0]["name"] == "A"
     assert reviews[0]["itemId"] is None
+    assert all(split == "train" and streaming is True for _, split, streaming in calls)
