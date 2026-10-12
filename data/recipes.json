@@ -1,0 +1,98 @@
+[
+  {
+    "id": 1,
+    "name": "Classic Margherita Pizza",
+    "cuisine": "Italian",
+    "servings": 2,
+    "prep_time": "20 mins",
+    "cook_time": "15 mins",
+    "total_time": "35 mins",
+    "ingredients": ["1 pizza dough ball (about 260g)", "2 tablespoons tomato sauce", "1 cup shredded mozzarella cheese", "6-8 fresh basil leaves", "1 tablespoon olive oil", "pinch of salt", "optional: grated parmesan"],
+    "directions": ["Preheat oven to 250°C (482°F) with a baking stone if available.", "Roll out dough to a 12-inch circle on a floured surface.", "Spread tomato sauce evenly over dough, leaving a 1/2-inch border.", "Scatter mozzarella cheese over sauce.", "Bake on the stone for 10-12 minutes until crust is crisp and cheese melts.", "Finish with basil leaves, drizzle with olive oil, and season with salt and optional parmesan.", "Slice and serve immediately."],
+    "image_description": "A classic Margherita pizza with a charred crust is sliced into four portions on a wooden board. The pizza is topped with red sauce, melted white cheese, and fresh green basil leaves."
+  },
+  {
+    "id": 2,
+    "name": "Chicken Tikka Masala",
+    "cuisine": "Indian",
+    "servings": 4,
+    "prep_time": "25 mins",
+    "cook_time": "40 mins",
+    "total_time": "1 hour 5 mins",
+    "ingredients": ["500g boneless chicken thighs, cubed", "1 cup yogurt", "2 tablespoons lemon juice", "2 teaspoons garam masala", "1 teaspoon ground cumin", "1 teaspoon ground coriander", "1 onion, minced", "2 cloves garlic, minced", "1 tablespoon grated ginger", "1 can (400g) crushed tomatoes", "1 cup heavy cream or coconut cream", "2 tablespoons oil", "Salt to taste", "Fresh cilantro for garnish"],
+    "directions": ["Marinate chicken in yogurt, lemon juice, garam masala, cumin, coriander, and a pinch of salt for at least 30 minutes.", "In a large pan, heat oil and sauté onion until translucent.", "Add garlic and ginger; cook 1 minute until fragrant.", "Add marinated chicken; cook until browned on all sides.", "Stir in crushed tomatoes and simmer 15 minutes.", "Reduce heat and add cream; simmer 5-10 minutes until sauce thickens.", "Garnish with cilantro and serve with rice or naan."],
+    "image_description": "Chicken Tikka Masala is served in a bronze bowl with charred chicken pieces in a vibrant red sauce garnished with fresh cilantro."
+  },
+  {
+    "id": 3,
+    "name": "Vegetable Stir-Fry with Tofu",
+    "cuisine": "Chinese",
+    "servings": 3,
+    "prep_time": "15 mins",
+    "cook_time": "12 mins",
+    "total_time": "27 mins",
+    "ingredients": ["200g firm tofu, cubed", "1 tablespoon soy sauce", "1 tablespoon cornstarch", "2 tablespoons vegetable oil", "1 cup broccoli florets", "1 red bell pepper, sliced", "1 carrot, julienned", "1 cup snap peas", "2 cloves garlic, minced", "1 tablespoon rice vinegar", "1 tablespoon hoisin sauce", "1 teaspoon sesame oil"],
+    "directions": ["Toss tofu with soy sauce and cornstarch.", "Heat oil in a wok or large skillet over high heat.", "Fry tofu until golden; remove and set aside.", "Add garlic and vegetables; stir-fry 3-4 minutes until crisp-tender.", "Return tofu to pan; add rice vinegar, hoisin sauce, and sesame oil.", "Cook 1-2 minutes until coated; serve with steamed rice."],
+    "image_description": "A white bowl contains a stir-fry of cubed tofu, broccoli florets, sliced carrots, and green peas in a brown sauce."
+  },
+  {
+    "id": 4,
+    "name": "Greek Giouvertsa Salad with Lemon-Oregano Dressing",
+    "cuisine": "Greek",
+    "servings": 2,
+    "prep_time": "15 mins",
+    "cook_time": "0 mins",
+    "total_time": "15 mins",
+    "ingredients": ["2 cups chopped romaine", "1 cucumber, diced", "1 cup cherry tomatoes, halved", "1/2 red onion, thinly sliced", "1/2 cup Kalamata olives", "1/2 cup feta cheese, crumbled", "2 tablespoons olive oil", "1 tablespoon lemon juice", "1 teaspoon dried oregano", "Salt and pepper to taste"],
+    "directions": ["Toss romaine, cucumber, tomatoes, onion, olives, and feta in a bowl.", "Whisk olive oil, lemon juice, oregano, salt, and pepper to make dressing.", "Pour dressing over the salad and toss to combine.", "Serve immediately."],
+    "image_description": "A vibrant Greek salad with greens, cherry tomatoes, cucumber, red onion, Kalamata olives, and crumbled white cheese."
+  },
+  {
+    "id": 5,
+    "name": "Spaghetti Aglio e Olio",
+    "cuisine": "Italian",
+    "servings": 2,
+    "prep_time": "10 mins",
+    "cook_time": "15 mins",
+    "total_time": "25 mins",
+    "ingredients": ["200g spaghetti", "4 cloves garlic, thinly sliced", "1/2 teaspoon red pepper flakes", "1/4 cup olive oil", "Fresh parsley, chopped", "Salt to taste", "Grated parmesan to serve"],
+    "directions": ["Cook spaghetti in salted water until al dente; reserve 1/2 cup pasta water.", "Heat olive oil in a pan; add garlic and red pepper flakes, cook until fragrant and lightly golden.", "Toss pasta with garlic oil, adding reserve water as needed.", "Season, mix in parsley, and serve with parmesan."],
+    "image_description": "Spaghetti Aglio e Olio in a white bowl, topped with grated cheese, chopped parsley, and garlic."
+  },
+  {
+    "id": 6,
+    "name": "Distance-Glazed Salmon with Dill",
+    "cuisine": "American",
+    "servings": 2,
+    "prep_time": "10 mins",
+    "cook_time": "12 mins",
+    "total_time": "22 mins",
+    "ingredients": ["2 salmon fillets", "2 tablespoons honey", "1 tablespoon soy sauce", "1 tablespoon Dijon mustard", "1 tablespoon fresh dill, chopped", "Salt and pepper to taste"],
+    "directions": ["Preheat oven to 200°C (400°F).", "Mix honey, soy sauce, mustard, and dill.", "Season salmon with salt and pepper; brush with glaze.", "Bake 10-12 minutes until flaky; drizzle remaining glaze over and serve."],
+    "image_description": "A glazed salmon fillet on a wooden cutting board, topped with fresh dill and a glossy glaze."
+  },
+  {
+    "id": 7,
+    "name": "Tomato Basil Soup",
+    "cuisine": "American",
+    "servings": 4,
+    "prep_time": "10 mins",
+    "cook_time": "25 mins",
+    "total_time": "35 mins",
+    "ingredients": ["1 tablespoon olive oil", "1 onion, chopped", "2 cloves garlic, minced", "2 cans (400g each) crushed tomatoes", "1 cup vegetable broth", "1/2 cup cream or coconut milk", "Fresh basil, torn", "Salt and pepper to taste"],
+    "directions": ["Sauté onion and garlic in olive oil until translucent.", "Add crushed tomatoes and broth; simmer 15 minutes.", "Blend until smooth or leave chunky based on preference.", "Stir in cream and basil; season to taste and serve."],
+    "image_description": "A vibrant red-orange tomato basil soup garnished with basil leaves and herbs."
+  },
+  {
+    "id": 8,
+    "name": "Pad Thai",
+    "cuisine": "Thai",
+    "servings": 2,
+    "prep_time": "20 mins",
+    "cook_time": "15 mins",
+    "total_time": "35 mins",
+    "ingredients": ["150g rice noodles", "2 tablespoons tamarind paste", "2 tablespoons fish sauce", "1 tablespoon palm sugar or brown sugar", "2 eggs", "200g shrimp or chicken", "1 cup bean sprouts", "2 cloves garlic, minced", "1 lime, cut into wedges", "1/4 cup roasted peanuts, chopped", "1 tablespoon oil", "Chili flakes (optional)"],
+    "directions": ["Prepare noodles according to package; drain and set aside.", "Mix tamarind paste, fish sauce, and sugar to make sauce.", "Sauté garlic in oil; add shrimp or chicken and cook through.", "Push meat aside, scramble eggs in the pan, then mix with noodles.", "Add sauce and bean sprouts; toss quickly.", "Garnish with peanuts, lime wedges, and chili flakes if desired."],
+    "image_description": "Pad Thai with stir-fried rice noodles, shrimp, scrambled eggs, bean sprouts, green onions, and cashews."
+  }
+]
