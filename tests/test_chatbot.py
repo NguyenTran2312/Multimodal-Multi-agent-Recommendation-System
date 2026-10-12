@@ -135,3 +135,23 @@ def test_retrieve_candidates_applies_explicit_strict_constraints():
             return []
     prefs = UserPreferences(location="District 1", strict_constraints={"location": "District 1"})
     assert retrieve_candidates(Store(), "must be in District 1", prefs) == []
+
+
+def test_retrieve_candidates_returns_only_exact_matches_when_available_and_caps_at_three():
+    from src.agents.schemas import UserPreferences
+    from src.ui.chatbot import retrieve_candidates
+
+    class Store:
+        def has_collection(self, name): return False
+        def search(self, kind, query, preferences, **kwargs):
+            if kwargs.get("modality") != "text":
+                return []
+            return [
+                {"id": "r1", "record": {"name": "Exact 1", "cuisine": "Italian"}, "document": "Italian", "distance": 0.1, "modality": "text"},
+                {"id": "r2", "record": {"name": "Exact 2", "cuisine": "Italian"}, "document": "Italian", "distance": 0.2, "modality": "text"},
+                {"id": "r3", "record": {"name": "Fallback 1", "cuisine": "Japanese"}, "document": "Japanese", "distance": 0.3, "modality": "text"},
+                {"id": "r4", "record": {"name": "Fallback 2", "cuisine": "American"}, "document": "American", "distance": 0.4, "modality": "text"},
+            ]
+
+    results = retrieve_candidates(Store(), "Italian restaurant", UserPreferences(cuisine=["Italian"]), retrieval_k=3)
+    assert [item["id"] for item in results] == ["r1", "r2"]
