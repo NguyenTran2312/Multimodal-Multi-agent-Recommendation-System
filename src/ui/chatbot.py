@@ -286,8 +286,8 @@ def format_workflow_result(result: dict) -> str:
         preferences = result.get("preferences")
         strict = _strict_dict(preferences) if isinstance(preferences, UserPreferences) else {}
         if strict:
-            return "I couldn't find a relevant candidate that satisfies the mandatory constraints in your request."
-        return "I couldn't find a sufficiently relevant restaurant, dish, or recipe for this request."
+            return "I couldn't find a relevant candidate in the indexed data or current web evidence that satisfies the mandatory constraints in your request."
+        return "I couldn't find a sufficiently relevant restaurant, dish, or recipe in the indexed data or current web evidence for this request."
     candidates = {str(item["id"]): item for item in result.get("candidates", [])}
     response = result["recommendations"]
     lines = []
