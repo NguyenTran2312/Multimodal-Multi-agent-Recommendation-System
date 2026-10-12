@@ -1,62 +1,73 @@
 # Multimodal Multi-Agent Food Recommendation System
 
-A portfolio-grade AI recommendation application refactored from a sequence of course labs into one runnable Python project. The system combines semantic retrieval, CLIP-compatible visual retrieval, metadata filtering, multimodal score fusion, structured LLM agents, LangGraph orchestration, and a Gradio chat interface.
+A multimodal food recommendation application that combines local retrieval, structured LLM reasoning, Vietnamese food knowledge, and optional live web search.
+
+The system supports restaurant, dish, and recipe queries. It retrieves candidates from a persistent Chroma index, combines text and visual-semantic signals, applies preference-aware reranking, and uses LangGraph-orchestrated agents to produce grounded recommendations.
 
 ![Architecture](assets/architecture.svg)
 
-## Problem
+## Features
 
-Food requests are usually underspecified and subjective: a user may ask for "a cozy inexpensive Japanese place" or "something colorful with tofu I can cook at home." A useful recommender needs to combine semantic meaning, structured constraints, visual/style cues, and explanation without allowing the LLM to invent options that are absent from the data.
-
-This project therefore follows one core rule:
-
-> The LLM may reason over retrieved candidates, but the final recommendation must reference a candidate that actually came from retrieval.
-
-## What the system does
-
-- interprets restaurant vs. recipe intent;
-- extracts structured cuisine, budget, atmosphere, dietary, and location preferences;
-- retrieves candidates from a persistent Chroma index;
-- uses SentenceTransformers for semantic text embeddings;
-- exposes CLIP image and text encoders for a shared visual-semantic space;
-- applies metadata constraints where structured metadata is available;
-- normalizes modality scores and fuses text/visual rankings;
-- runs profile, trend, style, and nutrition analysis agents;
-- orchestrates the agent branches with LangGraph;
-- validates structured LLM outputs with Pydantic;
-- rejects final recommendations that reference non-retrieved IDs;
-- serves the result through a Gradio chat UI.
+- Restaurant, dish, and recipe intent routing
+- Structured preference extraction for cuisine, budget, atmosphere, dietary needs, and location
+- SentenceTransformer semantic retrieval
+- CLIP-based visual-semantic retrieval
+- Persistent ChromaDB collections
+- Multimodal score fusion and preference-aware reranking
+- Vietnamese dish and review knowledge from public datasets
+- Optional Tavily web search for current or missing restaurant information
+- Structured Pydantic outputs for LLM calls
+- LangGraph orchestration for profile, trend, style, nutrition, and recommendation agents
+- Candidate grounding so final recommendations must reference retrieved or web-grounded candidates
+- Source links for web-derived restaurant recommendations
+- Gradio chat interface
+- Retrieval evaluation and automated tests
 
 ## Architecture
 
 ```text
-User
-  ↓
-Gradio
-  ↓
-Intent + structured preference extraction
-  ↓
-Local retrieval
-  ├── SentenceTransformer text embeddings
-  ├── CLIP joint-space embeddings
-  ├── Chroma vector search
-  ├── metadata filtering
-  └── normalized score fusion
-  ↓
-Retrieved candidates
-  ↓
-LangGraph
-  ├── profile analysis
-  ├── trend analysis
-  ├── style analysis
-  └── nutrition analysis
-  ↓
+User query
+   |
+   v
+Intent classification
+   |-----------------------------|
+   |             |               |
+restaurant      dish           recipe
+   |             |               |
+   v             v               v
+Local retrieval from Chroma
+   |
+   +-- SentenceTransformer text retrieval
+   +-- CLIP visual-semantic retrieval
+   +-- metadata / strict-constraint filtering
+   +-- multimodal fusion
+   +-- preference-aware reranking
+   |
+   v
+Optional Tavily search
+   |
+   +-- current / nearby / open-now requests
+   +-- weak or missing local restaurant matches
+   +-- structured RestaurantWebEvidence extraction
+   |
+   v
+Merged grounded candidates
+   |
+   v
+LangGraph analysis agents
+   +-- profile
+   +-- trends
+   +-- style
+   +-- nutrition
+   |
+   v
 Grounded recommendation agent
-  ↓
-Restaurant / recipe response
+   |
+   v
+Gradio response
 ```
 
-The expensive API-backed model is used for language reasoning. Data loading, embeddings, vector retrieval, filtering, and fusion remain local.
+The LLM is used for structured language reasoning and recommendation synthesis. Embedding generation, vector retrieval, filtering, fusion, and most ranking operations remain deterministic application logic.
 
 ## Repository structure
 
@@ -64,111 +75,214 @@ The expensive API-backed model is used for language reasoning. Data loading, emb
 .
 ├── app.py
 ├── src/
-│   ├── agents/          # structured specialized agents
-│   ├── data/            # loading + offline preprocessing
-│   ├── embeddings/      # reusable SentenceTransformer / CLIP wrappers
-│   ├── retrieval/       # Chroma search + metadata filters + fusion
-│   ├── ui/              # Gradio adapter
-│   └── workflow/        # LangGraph workflow
+│   ├── agents/          # structured LLM agents and schemas
+│   ├── data/            # loaders and normalization code
+│   ├── embeddings/      # SentenceTransformer and CLIP wrappers
+│   ├── retrieval/       # Chroma search, fusion, reranking, web fallback
+│   ├── tools/           # Tavily client
+│   ├── ui/              # Gradio chatbot integration
+│   └── workflow/        # LangGraph orchestration
 ├── scripts/
 │   ├── preprocess_data.py
+│   ├── download_vietnamese_data.py
+│   ├── download_external_data.py
 │   ├── build_index.py
 │   └── smoke_test.py
 ├── evaluation/
-│   ├── queries.json
-│   └── evaluate_retrieval.py
 ├── tests/
 ├── data/
-├── assets/
-└── notebooks/original_labs/
+└── assets/
 ```
 
-## Setup
+## Requirements
 
 Python 3.11+ is recommended.
 
+Create a virtual environment and install dependencies:
+
 ```bash
 python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+source .venv/bin/activate
+# Windows: .venv\Scripts\activate
+
 pip install -r requirements.txt
 ```
 
-Create your local environment file:
+## Configuration
+
+Copy the example environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Then set:
+Configure the required OpenAI key and, optionally, Tavily web search:
 
 ```text
-OPENAI_API_KEY=your_key_here
+OPENAI_API_KEY=your_openai_key
 OPENAI_MODEL=gpt-4.1-mini
+
+TAVILY_API_KEY=your_tavily_key
+ENABLE_WEB_SEARCH=true
 ```
 
-Never commit `.env`.
+`TAVILY_API_KEY` is optional. If Tavily is disabled or unavailable, the application continues using local retrieval only.
 
-## Data preparation
+Do not commit `.env` or API keys.
 
-The repository already contains normalized portfolio datasets. To rerun normalization:
+## Data
+
+The project uses two kinds of data:
+
+1. Bundled restaurant and recipe records used by the local recommendation index.
+2. Optional external datasets that enrich Vietnamese dish, review, and recipe knowledge.
+
+### Vietnamese datasets
+
+The Vietnamese normalization pipeline supports:
+
+- `HoagMin/Vietnamese_StreetFood_Dataset`
+- `Tamir39/foodlensvn`
+- `phuongnt101/VLSP2018-ABSA-Restaurant`
+
+Download and normalize them with:
 
 ```bash
-python scripts/preprocess_data.py \
-  --restaurants data/restaurants.json \
-  --recipes data/recipes.json \
-  --reviews data/reviews.json \
-  --output-dir data/processed
+python scripts/download_vietnamese_data.py
 ```
 
-Image-caption generation is deliberately not performed at application startup. Existing captions/descriptions are treated as offline data assets.
+Generated files are written under:
 
-## Build the local vector index
+```text
+data/normalized/
+├── dishes.jsonl
+├── reviews_vi.jsonl
+└── images/
+```
+
+The normalization layer preserves source provenance and does not invent restaurant names, addresses, ratings, prices, or other unsupported metadata.
+
+### Optional external recipe and review data
+
+Additional data can be downloaded with:
+
+```bash
+python scripts/download_external_data.py --recipe-limit 1000 --review-limit 5000
+```
+
+Generated files are stored under `data/external/`.
+
+For development, use bounded limits. Large recipe datasets can be expensive to download and index in full.
+
+## Build the vector index
+
+After preparing the data, build the persistent Chroma index:
 
 ```bash
 python scripts/build_index.py
 ```
 
-The first run may download the configured SentenceTransformer and CLIP models. The index is persisted under `data/chroma/` and is not rebuilt when the application starts.
+The index contains required restaurant and recipe collections plus optional Vietnamese collections when normalized data is available:
 
-### Visual-channel note
+```text
+restaurants_text
+restaurants_image
+recipes_text
+recipes_image
+dish_text
+dish_image
+review_text
+```
 
-`ImageEmbedder` supports raw image embedding with CLIP. The bundled portfolio data does not include all original image binaries, so `build_index.py` uses the supplied visual descriptions/captions through CLIP's text encoder for the persisted visual channel. The preserved original lab notebooks show the raw-image indexing exercise used during the course.
+The first build may download the configured SentenceTransformer and CLIP models.
 
-## Run the app
+## Run the application
 
 ```bash
 python app.py
 ```
 
+The Gradio interface accepts restaurant, dish, and recipe questions.
+
 Example prompts:
 
 ```text
-I want an inexpensive cozy Japanese restaurant.
+Find me a Vietnamese restaurant for dinner with spicy food and a moderate budget.
 
-Find me a colorful tofu recipe I can make at home.
+What Vietnamese dish would you recommend if I want noodles, beef, and something spicy?
+
+Give me a Vietnamese-style noodle recipe with simple ingredients.
+
+Find a real Vietnamese restaurant that is open now in District 1.
 ```
 
-You can also exercise the full runtime without launching Gradio:
+You can also run a command-line smoke test:
 
 ```bash
 python scripts/smoke_test.py "Find me a cozy Japanese restaurant"
 ```
 
-Missing API keys or an unbuilt index return actionable errors rather than opaque provider exceptions.
+## Retrieval behavior
+
+### Local retrieval
+
+The application retrieves from Chroma using text and visual-semantic channels. Results are fused and reranked using explicit preference signals.
+
+Cuisine, budget, atmosphere, and location are normally soft preferences. Explicit wording such as `must`, `only`, `exactly`, or equivalent Vietnamese terms can produce strict constraints.
+
+### Dish retrieval
+
+Dish-oriented questions search the Vietnamese dish collections directly instead of being forced through restaurant retrieval.
+
+Examples include:
+
+```text
+What Vietnamese dish has beef noodles and a spicy broth?
+
+What is similar to bún bò Huế but less spicy?
+```
+
+### Web search fallback
+
+Tavily can be used when a request needs current external information, such as:
+
+```text
+open now
+current
+nearby
+real restaurant
+recent
+```
+
+It can also be used when local restaurant retrieval does not provide a strong match.
+
+Tavily results are normalized into structured evidence before they can enter the recommendation pipeline. Missing fields remain unset rather than being inferred. Web-derived recommendations include their source URL.
+
+## Grounding rules
+
+The application is designed around several constraints:
+
+- Final recommendation IDs must come from the candidate set.
+- Web restaurant candidates must be supported by source evidence.
+- Missing web metadata is left null rather than guessed.
+- Explicit cuisine conflicts are rejected instead of presenting obviously wrong fallback restaurants.
+- If no sufficiently relevant candidate is available, the application can return a no-match response instead of inventing an option.
 
 ## Testing
+
+Run the test suite with:
 
 ```bash
 pytest -v
 ```
 
-The test suite covers configuration, malformed data, real uploaded review-image formats, embedding wrapper reuse, metadata filters, missing indexes, retrieval, score fusion, structured agent output, candidate grounding, workflow state propagation, no-result behavior, provider failures, direct CLI execution, and retrieval metrics.
+Tests cover configuration, data normalization, embeddings, filtering, retrieval, multimodal fusion, preference reranking, structured outputs, LangGraph workflow behavior, Vietnamese dish retrieval, Tavily fallback behavior, grounding, and no-result handling.
 
-Unit tests use fake model backends and do not download models or call paid APIs.
+Tests use mocked providers where possible so paid API calls are not required for normal unit testing.
 
 ## Evaluation
 
-`evaluation/queries.json` separates `dev` and `heldout` query records. The held-out records are not used to choose fusion weights.
+Retrieval evaluation utilities live under `evaluation/`.
 
 Run:
 
@@ -176,97 +290,82 @@ Run:
 python evaluation/evaluate_retrieval.py
 ```
 
-The report calculates:
+The evaluation code supports metrics such as:
 
 - Precision@K
 - Recall@K
 - Mean Reciprocal Rank (MRR)
 - Hit Rate@K
 
-for text-only, visual-only, and fused retrieval.
+Evaluation data should be treated separately from tuning data. Small experimental query sets are useful for debugging retrieval behavior but are not sufficient to establish general performance on unseen real-world food queries.
 
-### Current results
+## Running in Google Colab
 
-No retrieval-quality number is claimed in this repository until a real local index has been built and the held-out runner has been executed. The evaluation command intentionally refuses to fabricate metrics when the index is missing.
+```python
+!git clone https://github.com/NguyenTran2312/Multimodal-Multi-agent-Recommendation-System.git
+%cd Multimodal-Multi-agent-Recommendation-System
 
-This small fictional dataset is suitable for demonstrating retrieval mechanics and controlled comparisons; it does not establish performance on real-world restaurant or recipe traffic.
+!pip install -r requirements.txt
+```
+
+Set environment variables:
+
+```python
+import os
+
+os.environ["OPENAI_API_KEY"] = "YOUR_OPENAI_KEY"
+os.environ["OPENAI_MODEL"] = "gpt-4.1-mini"
+os.environ["TAVILY_API_KEY"] = "YOUR_TAVILY_KEY"
+os.environ["ENABLE_WEB_SEARCH"] = "true"
+```
+
+Prepare optional Vietnamese and external data:
+
+```python
+!python scripts/download_vietnamese_data.py
+!python scripts/download_external_data.py --recipe-limit 1000 --review-limit 5000
+```
+
+Build the index and run tests:
+
+```python
+!python scripts/build_index.py
+!pytest -v
+```
+
+Run the app:
+
+```python
+!python app.py
+```
+
+For Colab, Gradio may need `share=True` in the launch configuration to expose a public URL.
 
 ## Error handling
 
-The application explicitly handles:
+The application handles common runtime failures including:
 
 - missing API keys;
-- missing persisted vector indexes;
-- malformed JSON files;
-- invalid/broken image references during preprocessing;
-- metadata filters that return no candidates;
+- missing vector indexes;
+- malformed local data;
+- missing optional Vietnamese collections;
+- invalid image references;
+- empty retrieval results;
 - provider failures;
-- recommendations containing IDs that were not retrieved.
+- unsupported web metadata;
+- recommendation IDs that were not retrieved.
 
-## From labs to application
-
-The original notebooks are preserved unchanged under `notebooks/original_labs/`, but they are not required for normal execution.
-
-| Lab area | Portfolio module |
-|---|---|
-| multimodal preprocessing | `src/data/` |
-| vector index construction | `src/embeddings/`, `src/retrieval/vector_store.py` |
-| similarity + metadata filtering | `src/retrieval/search.py` |
-| multimodal score fusion | `src/retrieval/fusion.py` |
-| specialized agents | `src/agents/` |
-| multi-agent system | `src/workflow/` |
-| chatbot interface | `src/ui/`, `app.py` |
-
-## Engineering choices
-
-**Why local retrieval?** Embeddings, filtering, and ranking are deterministic operations that do not require an LLM call.
-
-**Why structured agent outputs?** Pydantic schemas convert prompt responses into explicit application contracts and reject malformed output.
-
-**Why candidate grounding?** A generative model can explain and rank retrieved candidates, but it cannot insert an unseen restaurant or recipe into the final result.
-
-**Why separate preprocessing?** Expensive enrichment belongs in a reproducible offline step, not in every application startup.
+External search failure does not invalidate the local retrieval path.
 
 ## Limitations
 
-- The datasets are fictional/course-provided and small.
-- The bundled visual channel relies on supplied visual descriptions when original image binaries are unavailable.
-- The restaurant JSON is reconstructed from the supplied culinary-map text because the lab-referenced structured restaurant file was not included in the uploaded files.
-- The current held-out set is intentionally small and should not be presented as evidence of production recommendation quality.
-- External image URLs may expire.
+- The bundled restaurant catalogue is small and does not represent comprehensive real-world restaurant coverage.
+- Vietnamese public datasets primarily provide dish, image, QA, and review knowledge rather than a verified restaurant directory.
+- Tavily search results depend on the quality and freshness of indexed web sources.
+- Current web evidence can be incomplete; missing rating, price, opening-hours, or menu fields are intentionally not fabricated.
+- The optional recipe corpus can be large and expensive to index fully.
+- Retrieval quality should be measured on a larger independently labeled evaluation set before making production-quality claims.
 
-## CV-ready summary
+## License
 
-**Multimodal Multi-Agent Food Recommendation System — Python, LangGraph, ChromaDB, SentenceTransformers, CLIP, Pydantic, Gradio**
-
-- Refactored seven instructional AI labs into a modular end-to-end restaurant and recipe recommendation application.
-- Built deterministic semantic retrieval with metadata filtering and multimodal score normalization/fusion over persistent Chroma collections.
-- Designed structured profile, trend, style, nutrition, and recommendation agents orchestrated with LangGraph and constrained to retrieved candidate IDs.
-- Added offline preprocessing, reproducible CLI workflows, automated tests, and a held-out retrieval-evaluation harness while avoiding unsupported production-quality claims.
-
-## Optional Vietnamese knowledge layer
-
-The app can be enriched with Vietnamese-only Hugging Face data without downloading anything at application startup. The approved sources are:
-
-- `HoagMin/Vietnamese_StreetFood_Dataset` for Vietnamese dish images/classes;
-- `Tamir39/foodlensvn` for Vietnamese food images and QA/attribute signals;
-- `phuongnt101/VLSP2018-ABSA-Restaurant` for Vietnamese restaurant-review text and aspect sentiment.
-
-Download and normalize them explicitly, then rebuild the local index:
-
-```bash
-pip install -r requirements.txt
-python scripts/download_vietnamese_data.py
-python scripts/build_index.py
-python app.py
-```
-
-Normalized files are written under `data/normalized/`. If those files are absent, the original restaurant/recipe indexing path still works. The downloader never fabricates restaurant names, locations, prices, ratings, or links between VLSP reviews and restaurants.
-
-Vietnamese dish records are indexed in optional `dish_text` and `dish_image` collections; review records go to `review_text`. Restaurant recommendations still come from the restaurant catalogue, while dish retrieval supplies Vietnamese semantic/visual knowledge. Budget, cuisine, and location are soft ranking preferences by default, with explicit `strict_constraints` reserved for genuine must-have filters.
-
-The Street Food source is distributed as a ZIP/YOLO-style archive, so the downloader extracts its image/label layout directly. FoodLens images are materialized locally when the dataset yields image objects. No Hugging Face download occurs when `app.py` starts.
-
-### Vietnamese evaluation
-
-`evaluation/queries.json` includes a separate `heldout_vi` group for Vietnamese prompts. Gold IDs are intentionally left empty until the restaurant catalogue contains validated Vietnamese targets; the evaluator skips unlabelled cases rather than inventing qrels. Do not claim Vietnamese retrieval quality until that group has manually validated labels and has been run against a real built index.
+See the repository license for usage terms. External datasets remain subject to their respective licenses and terms of use.
