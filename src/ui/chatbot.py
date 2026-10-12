@@ -46,7 +46,7 @@ def _strict_dict(preferences: UserPreferences) -> dict:
     return dict(strict or {})
 
 
-def retrieve_candidates(store, query: str, preferences: UserPreferences, *, candidate_depth: int = 20, retrieval_k: int = 5) -> list[dict]:
+def retrieve_candidates(store, query: str, preferences: UserPreferences, *, candidate_depth: int = 20, retrieval_k: int = 3) -> list[dict]:
     kind = "recipes" if classify_intent(query) == "recipe" else "restaurants"
     all_preferences = preferences.model_dump(exclude_none=True)
     soft_prefs = {key: value for key, value in all_preferences.items() if key in {"cuisine", "budget", "price", "location", "atmosphere"} and value}
@@ -66,7 +66,10 @@ def retrieve_candidates(store, query: str, preferences: UserPreferences, *, cand
     text_results = store.search(kind, query, search_preferences, k=candidate_depth, modality="text", strict_only=bool(strict))
     image_results = store.search(kind, query, search_preferences, k=candidate_depth, modality="image", strict_only=bool(strict))
     fused = fuse_rank(text_results, image_results)
-    return rerank_candidates(fused, soft_prefs, dish_terms=dish_terms)[:retrieval_k]
+    ranked = rerank_candidates(fused, soft_prefs, dish_terms=dish_terms)
+    exact = [item for item in ranked if item.get("match_type") == "exact"]
+    selected = exact if exact else ranked
+    return selected[: min(retrieval_k, 3)]
 
 
 def build_runtime() -> RecommendationWorkflow:
@@ -122,7 +125,7 @@ def format_workflow_result(result: dict) -> str:
     candidates = {str(item["id"]): item for item in result.get("candidates", [])}
     response = result["recommendations"]
     lines = []
-    for recommendation in sorted(response.recommendations, key=lambda item: item.rank):
+    for recommendation in sorted(response.recommendations, key=lambda item: item.rank)[:3]:
         candidate = candidates.get(recommendation.candidate_id)
         if candidate is None:
             raise ValueError(
