@@ -27,11 +27,9 @@ def _take(rows, limit: int):
         yield row
 
 
-def _first_split(dataset):
-    if hasattr(dataset, "items") and isinstance(getattr(dataset, "column_names", None), dict):
-        split, rows = next(iter(dataset.items()))
-        return split, rows
-    return "train", dataset
+def _load_split(load_dataset_fn, name: str, split: str = "train"):
+    """Load one split lazily so row limits do not require downloading the full dataset."""
+    return load_dataset_fn(name, split=split, streaming=True)
 
 
 def download_external_data(
@@ -49,15 +47,15 @@ def download_external_data(
     target = Path(output_dir)
     target.mkdir(parents=True, exist_ok=True)
 
-    recipe_dataset = load_dataset_fn(RECIPE_NLG_SOURCE)
-    recipe_split, recipe_rows = _first_split(recipe_dataset)
+    recipe_split = "train"
+    recipe_rows = _load_split(load_dataset_fn, RECIPE_NLG_SOURCE, recipe_split)
     recipes = [
         normalize_recipenlg_row(dict(row), source_id=f"{recipe_split}-{index}")
         for index, row in enumerate(_take(recipe_rows, recipe_limit))
     ]
 
-    review_dataset = load_dataset_fn(VI_REVIEW_SOURCE)
-    review_split, review_rows = _first_split(review_dataset)
+    review_split = "train"
+    review_rows = _load_split(load_dataset_fn, VI_REVIEW_SOURCE, review_split)
     reviews = [
         normalize_vi_review_row(
             dict(row),
