@@ -9,13 +9,14 @@ if str(REPO_ROOT) not in sys.path:
 
 from src.config import Settings
 from src.data.loader import load_recipes, load_restaurants
+from src.data.vietnamese import load_jsonl
 from src.embeddings.image import ImageEmbedder
 from src.embeddings.text import TextEmbedder
-from src.retrieval.vector_store import VectorStore, index_records
+from src.retrieval.vector_store import VectorStore, index_food_documents, index_records
 
 
-def main() -> None:
-    settings = Settings(api_key="index-build-does-not-use-llm")
+def build_index(settings: Settings | None = None) -> VectorStore:
+    settings = settings or Settings(api_key="index-build-does-not-use-llm")
     store = VectorStore.create(
         settings.chroma_path,
         text_embedder=TextEmbedder(settings.text_model_name),
@@ -23,6 +24,16 @@ def main() -> None:
     )
     index_records(store, "restaurants", load_restaurants(settings.restaurants_path))
     index_records(store, "recipes", load_recipes(settings.recipes_path))
+    normalized_dir = Path("data/normalized")
+    normalized_records = load_jsonl(normalized_dir / "dishes.jsonl") + load_jsonl(normalized_dir / "reviews_vi.jsonl")
+    if normalized_records:
+        index_food_documents(store, normalized_records)
+    return store
+
+
+def main() -> None:
+    settings = Settings(api_key="index-build-does-not-use-llm")
+    build_index(settings)
     print(f"Index written to {settings.chroma_path}")
 
 

@@ -11,6 +11,7 @@ from src.agents.style import analyze_style
 from src.agents.trends import analyze_trends
 from src.config import Settings
 from src.retrieval.fusion import fuse_rank
+from src.retrieval.ranking import rerank_candidates
 from src.retrieval.vector_store import VectorStore
 from src.workflow.recommendation import (
     CompiledGraphWorkflow,
@@ -22,7 +23,8 @@ from src.workflow.recommendation import (
 
 PREFERENCE_PROMPT = (
     "Extract explicit food preferences. Use empty lists/null for unspecified fields; "
-    "do not invent constraints."
+    "do not invent constraints. Put a preference in strict_constraints only when the user "
+    "clearly makes it mandatory (for example: must, only, exactly, under a hard limit)."
 )
 
 
@@ -36,6 +38,29 @@ def classify_intent(query: str) -> str:
 def extract_preferences(query: str, llm) -> UserPreferences:
     return invoke_structured(llm, UserPreferences, PREFERENCE_PROMPT, {"query": query})
 
+
+
+def retrieve_candidates(store, query: str, preferences: UserPreferences, *, candidate_depth: int = 20, retrieval_k: int = 5) -> list[dict]:
+    kind = "recipes" if classify_intent(query) == "recipe" else "restaurants"
+    all_preferences = preferences.model_dump(exclude_none=True)
+    soft_prefs = {key: value for key, value in all_preferences.items() if key in {"cuisine", "budget", "price", "location", "atmosphere"} and value}
+    strict = all_preferences.get("strict_constraints") or {}
+
+    dish_terms: list[str] = []
+    if kind == "restaurants" and store.has_collection("dish_text"):
+        for item in store.search("dish", query, {}, k=min(candidate_depth, 5), modality="text"):
+            record = item.get("record") or {}
+            term = record.get("name_vi") or record.get("name")
+            if term:
+                dish_terms.append(str(term))
+            elif item.get("document"):
+                dish_terms.append(str(item["document"]).split("|")[0].strip())
+
+    search_preferences = {"strict_constraints": strict} if strict else {}
+    text_results = store.search(kind, query, search_preferences, k=candidate_depth, modality="text", strict_only=bool(strict))
+    image_results = store.search(kind, query, search_preferences, k=candidate_depth, modality="image", strict_only=bool(strict))
+    fused = fuse_rank(text_results, image_results)
+    return rerank_candidates(fused, soft_prefs, dish_terms=dish_terms)[:retrieval_k]
 
 def build_runtime() -> RecommendationWorkflow:
     try:
@@ -60,20 +85,12 @@ def build_runtime() -> RecommendationWorkflow:
     )
 
     def retrieve(query: str, preferences: UserPreferences) -> list[dict]:
-        kind = "recipes" if classify_intent(query) == "recipe" else "restaurants"
-        all_preferences = preferences.model_dump(exclude_none=True)
-        prefs = {
-            key: value
-            for key, value in all_preferences.items()
-            if key in {"cuisine", "budget", "price", "location"} and value
-        }
-        text_results = store.search(
-            kind, query, prefs, k=settings.candidate_depth, modality="text"
+        return retrieve_candidates(
+            store, query, preferences,
+            candidate_depth=settings.candidate_depth,
+            retrieval_k=settings.retrieval_k,
         )
-        image_results = store.search(
-            kind, query, prefs, k=settings.candidate_depth, modality="image"
-        )
-        return fuse_rank(text_results, image_results)[: settings.retrieval_k]
+
 
     workflow = RecommendationWorkflow(
         preference_extractor=lambda query: extract_preferences(query, llm),
@@ -91,10 +108,11 @@ def build_runtime() -> RecommendationWorkflow:
 
 def format_workflow_result(result: dict) -> str:
     if result.get("status") == "no_match":
-        return (
-            "I couldn't find a matching restaurant or recipe in the indexed data. "
-            "Try relaxing the cuisine, price, location, or dietary filters."
-        )
+        preferences = result.get("preferences")
+        strict = getattr(preferences, "strict_constraints", None) if preferences is not None else None
+        if strict:
+            return "I couldn't find a relevant candidate in the indexed data that satisfies the mandatory constraints in your request."
+        return "I couldn't find a relevant restaurant or recipe in the indexed data for this request."
     candidates = {str(item["id"]): item for item in result.get("candidates", [])}
     response = result["recommendations"]
     lines = []
@@ -106,7 +124,11 @@ def format_workflow_result(result: dict) -> str:
             )
         record = candidate.get("record", {})
         name = record.get("name") or record.get("title") or recommendation.candidate_id
-        lines.append(f"{recommendation.rank}. **{name}** — {recommendation.reason}")
+        note = ""
+        if candidate.get("match_type") == "relaxed":
+            missed = ", ".join(candidate.get("preference_mismatches", []))
+            note = f" (closest match; differs on {missed})" if missed else " (closest match)"
+        lines.append(f"{recommendation.rank}. **{name}** — {recommendation.reason}{note}")
     return "\n\n".join(lines) if lines else "No grounded recommendation was produced."
 
 

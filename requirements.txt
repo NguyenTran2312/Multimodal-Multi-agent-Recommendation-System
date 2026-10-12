@@ -9,3 +9,5 @@ langgraph
 gradio
 pytest
 langchain-openai
+datasets
+huggingface_hub

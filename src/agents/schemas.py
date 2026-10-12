@@ -11,6 +11,7 @@ class UserPreferences(BaseModel):
     atmosphere: list[str] = Field(default_factory=list)
     dietary_preferences: list[str] = Field(default_factory=list)
     location: str | None = None
+    strict_constraints: dict[str, object] = Field(default_factory=dict)
 
 
 class ProfileOutput(BaseModel):
