@@ -14,7 +14,7 @@ class Settings:
     recipes_path: Path = Path("data/recipes.json")
     reviews_path: Path = Path("data/reviews.json")
     chroma_path: Path = Path("data/chroma")
-    retrieval_k: int = 5
+    retrieval_k: int = 3
     candidate_depth: int = 20
 
     @classmethod
