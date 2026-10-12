@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-RECIPE_NLG_SOURCE = "mbien/recipe_nlg"
+RECIPE_NLG_SOURCE = "LIUH0115/RecipeNLG_Group8"
 VI_REVIEW_SOURCE = "pqthinh232/vietnamese-restaurant-review-sentiment-dataset"
 
 
