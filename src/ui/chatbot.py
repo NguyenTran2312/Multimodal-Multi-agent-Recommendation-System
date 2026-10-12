@@ -5,6 +5,7 @@ import os
 from src.agents._common import invoke_structured
 from src.agents.nutrition import analyze_nutrition
 from src.agents.profile import build_profile
+from src.agents.prompt_policy import compose_prompt
 from src.agents.recommender import generate_recommendations
 from src.agents.schemas import UserPreferences
 from src.agents.style import analyze_style
@@ -21,10 +22,22 @@ from src.workflow.recommendation import (
 )
 
 
-PREFERENCE_PROMPT = (
-    "Extract explicit food preferences. Use empty lists/null for unspecified fields; "
-    "do not invent constraints. Put a preference in strict_constraints only when the user "
-    "clearly makes it mandatory (for example: must, only, exactly, under a hard limit)."
+PREFERENCE_PROMPT = compose_prompt(
+    """
+TASK: Extract only explicit culinary preferences into the UserPreferences schema.
+
+Interpret English and Vietnamese culinary wording, including established cuisine and dish
+names. Preserve cuisine, budget, atmosphere, dietary preference, and location intent when
+stated. Treat ordinary preference language such as "prefer", "would like", "ưu tiên", or
+"muốn" as soft preferences. Put a value in strict_constraints only when the user clearly
+makes it mandatory with wording such as "must", "only", "exactly", a hard upper/lower
+limit, "chỉ", "bắt buộc", or an equivalent unambiguous requirement.
+
+Do not infer an unstated location, budget, allergy, dietary status, cuisine, atmosphere, or
+other constraint. Normalize obvious synonyms only when their meaning is unambiguous. Use
+empty lists or null for fields the user did not specify. Do not turn a soft preference into
+a hard filter.
+"""
 )
 
 
