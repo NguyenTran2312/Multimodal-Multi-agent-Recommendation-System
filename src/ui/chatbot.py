@@ -11,9 +11,17 @@ from src.agents.schemas import UserPreferences
 from src.agents.style import analyze_style
 from src.agents.trends import analyze_trends
 from src.config import Settings
+from src.retrieval.external import (
+    deduplicate_candidates,
+    place_to_candidate,
+    should_use_external_search,
+    web_result_to_evidence,
+)
 from src.retrieval.fusion import fuse_rank
 from src.retrieval.ranking import rerank_candidates
 from src.retrieval.vector_store import VectorStore
+from src.tools.places import GooglePlacesClient
+from src.tools.web_search import TavilyWebSearchClient
 from src.workflow.recommendation import (
     CompiledGraphWorkflow,
     RecommendationWorkflow,
@@ -59,10 +67,23 @@ def _strict_dict(preferences: UserPreferences) -> dict:
     return dict(strict or {})
 
 
-def retrieve_candidates(store, query: str, preferences: UserPreferences, *, candidate_depth: int = 20, retrieval_k: int = 3) -> list[dict]:
+def retrieve_candidates(
+    store,
+    query: str,
+    preferences: UserPreferences,
+    *,
+    candidate_depth: int = 20,
+    retrieval_k: int = 3,
+    web_search_client=None,
+    places_client=None,
+) -> list[dict]:
     kind = "recipes" if classify_intent(query) == "recipe" else "restaurants"
     all_preferences = preferences.model_dump(exclude_none=True)
-    soft_prefs = {key: value for key, value in all_preferences.items() if key in {"cuisine", "budget", "price", "location", "atmosphere"} and value}
+    soft_prefs = {
+        key: value
+        for key, value in all_preferences.items()
+        if key in {"cuisine", "budget", "price", "location", "atmosphere"} and value
+    }
     strict = _strict_dict(preferences)
 
     dish_terms: list[str] = []
@@ -76,13 +97,50 @@ def retrieve_candidates(store, query: str, preferences: UserPreferences, *, cand
                 dish_terms.append(str(item["document"]).split("|")[0].strip())
 
     search_preferences = {"strict_constraints": strict} if strict else {}
-    text_results = store.search(kind, query, search_preferences, k=candidate_depth, modality="text", strict_only=bool(strict))
-    image_results = store.search(kind, query, search_preferences, k=candidate_depth, modality="image", strict_only=bool(strict))
+    text_results = store.search(
+        kind,
+        query,
+        search_preferences,
+        k=candidate_depth,
+        modality="text",
+        strict_only=bool(strict),
+    )
+    image_results = store.search(
+        kind,
+        query,
+        search_preferences,
+        k=candidate_depth,
+        modality="image",
+        strict_only=bool(strict),
+    )
     fused = fuse_rank(text_results, image_results)
     ranked = rerank_candidates(fused, soft_prefs, dish_terms=dish_terms)
     exact = [item for item in ranked if item.get("match_type") == "exact"]
     selected = exact if exact else ranked
-    return selected[: min(retrieval_k, 3)]
+    selected = selected[: min(retrieval_k, 3)]
+
+    if not should_use_external_search(query, selected, preferences):
+        return selected
+
+    external_evidence: list[dict] = []
+    if web_search_client is not None:
+        external_evidence = [
+            web_result_to_evidence(item)
+            for item in web_search_client.search(query, max_results=5)
+        ]
+
+    external_candidates: list[dict] = []
+    if kind == "restaurants" and places_client is not None:
+        external_candidates = [
+            place_to_candidate(item)
+            for item in places_client.search(query, max_results=min(retrieval_k, 3))
+        ]
+
+    merged = external_candidates + selected
+    if external_evidence:
+        for candidate in merged:
+            candidate.setdefault("external_evidence", external_evidence)
+    return deduplicate_candidates(merged)[: min(retrieval_k, 3)]
 
 
 def build_runtime() -> RecommendationWorkflow:
@@ -106,12 +164,26 @@ def build_runtime() -> RecommendationWorkflow:
         model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
         temperature=0,
     )
+    web_search_client = (
+        TavilyWebSearchClient(settings.tavily_api_key)
+        if settings.enable_web_search and settings.tavily_api_key
+        else None
+    )
+    places_client = (
+        GooglePlacesClient(settings.google_places_api_key)
+        if settings.enable_places_search and settings.google_places_api_key
+        else None
+    )
 
     def retrieve(query: str, preferences: UserPreferences) -> list[dict]:
         return retrieve_candidates(
-            store, query, preferences,
+            store,
+            query,
+            preferences,
             candidate_depth=settings.candidate_depth,
             retrieval_k=settings.retrieval_k,
+            web_search_client=web_search_client,
+            places_client=places_client,
         )
 
     workflow = RecommendationWorkflow(
