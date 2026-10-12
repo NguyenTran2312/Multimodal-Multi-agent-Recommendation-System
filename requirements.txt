@@ -11,3 +11,4 @@ pytest
 langchain-openai
 datasets
 huggingface_hub
+requests
