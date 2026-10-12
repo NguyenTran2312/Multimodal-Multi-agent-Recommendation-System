@@ -7,8 +7,8 @@ from src.agents.schemas import RecommendationResponse, UserPreferences
 
 PROMPT = compose_prompt(
     """
-TASK: Produce the final user-facing culinary recommendations from only the provided
-candidate IDs, analyses, preferences, and original user query when present.
+TASK: Produce the final user-facing culinary recommendations from only the provided candidate
+IDs, analyses, preferences, and original user query when present.
 
 Recommend the strongest relevant options only; do not add a weak alternative merely to
 fill the list. Keep the response to the supplied candidate set and at most the configured
