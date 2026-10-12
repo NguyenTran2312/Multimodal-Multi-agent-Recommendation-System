@@ -93,7 +93,7 @@ def _spicy_signal(question: str, answer: str) -> bool | None:
 def normalize_foodlens_rows(rows: list[dict], *, split: str) -> list[FoodDocument]:
     grouped: dict[str, list[dict]] = defaultdict(list)
     for index, row in enumerate(rows):
-        key = str(row.get("image_id") or row.get("id") or row.get("image") or f"row-{index}")
+        key = str(row.get("image_id") or row.get("id") or row.get("_source_id") or f"row-{index}")
         grouped[key].append(row)
     output: list[FoodDocument] = []
     for source_id, group in grouped.items():
@@ -122,7 +122,7 @@ def normalize_foodlens_rows(rows: list[dict], *, split: str) -> list[FoodDocumen
             dish_tags=tags,
             description=qa_text or f"{name_vi}, a Vietnamese dish.",
             spicy=spicy,
-            image_path=str(first.get("image_path") or first.get("image") or "") or None,
+            image_path=str(first.get("image_path") or "") or None,
             source_dataset=FOODLENS_SOURCE,
             source_id=source_id,
             split=split if split in {"train", "validation", "test"} else "unknown",
