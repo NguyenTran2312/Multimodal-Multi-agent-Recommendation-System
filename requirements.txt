@@ -1,0 +1,11 @@
+chromadb
+sentence-transformers
+transformers
+pillow
+pydantic
+python-dotenv
+langchain
+langgraph
+gradio
+pytest
+langchain-openai
