@@ -12,6 +12,7 @@ from src.retrieval.search import build_where
 REQUIRED_COLLECTIONS = ("restaurants_text", "restaurants_image", "recipes_text", "recipes_image")
 OPTIONAL_COLLECTIONS = ("dish_text", "dish_image", "review_text")
 COLLECTIONS = REQUIRED_COLLECTIONS + OPTIONAL_COLLECTIONS
+INDEX_BATCH_SIZE = 1000
 
 
 class VectorStore:
@@ -107,26 +108,36 @@ def _clip_record_text(record: dict) -> str:
     return " | ".join(str(v) for v in preferred if v)[:1200]
 
 
+def _batches(items: list, size: int = INDEX_BATCH_SIZE):
+    for start in range(0, len(items), size):
+        yield items[start : start + size]
+
+
 def index_records(store: VectorStore, kind: str, records: list[dict]) -> None:
     if not records:
         return
-    ids = [str(record.get("itemId") or record.get("id") or index) for index, record in enumerate(records)]
-    documents = [_record_text(record) for record in records]
-    metadata = [_metadata(record) for record in records]
-    text_vectors = store.text_embedder.embed_texts(documents)
-    store.collections[f"{kind}_text"].upsert(ids=ids, embeddings=text_vectors, documents=documents, metadatas=metadata)
-    visual_texts = [str(record.get("image_description") or record.get("image_caption") or _clip_record_text(record)) for record in records]
-    image_vectors = [store.image_embedder.embed_text(text) for text in visual_texts]
-    store.collections[f"{kind}_image"].upsert(ids=ids, embeddings=image_vectors, documents=visual_texts, metadatas=metadata)
+    for offset in range(0, len(records), INDEX_BATCH_SIZE):
+        batch = records[offset : offset + INDEX_BATCH_SIZE]
+        ids = [str(record.get("itemId") or record.get("id") or offset + index) for index, record in enumerate(batch)]
+        documents = [_record_text(record) for record in batch]
+        metadata = [_metadata(record) for record in batch]
+        text_vectors = store.text_embedder.embed_texts(documents)
+        store.collections[f"{kind}_text"].upsert(ids=ids, embeddings=text_vectors, documents=documents, metadatas=metadata)
+
+        visual_texts = [str(record.get("image_description") or record.get("image_caption") or _clip_record_text(record)) for record in batch]
+        image_vectors = [store.image_embedder.embed_text(text) for text in visual_texts]
+        store.collections[f"{kind}_image"].upsert(ids=ids, embeddings=image_vectors, documents=visual_texts, metadatas=metadata)
 
 
 def index_food_documents(store: VectorStore, records: list[dict | FoodDocument]) -> None:
     dishes: list[tuple[str, dict, str, str]] = []
     reviews: list[tuple[str, dict, str]] = []
+    data_by_id: dict[str, dict] = {}
     for item in records:
         data = item.model_dump() if isinstance(item, FoodDocument) else dict(item)
         entity_type = data.get("entity_type")
         item_id = str(data.get("id") or data.get("source_id"))
+        data_by_id[item_id] = data
         metadata = _metadata(data)
         if entity_type == "dish":
             dishes.append((item_id, metadata, build_text_document(data), build_clip_text(data)))
@@ -134,28 +145,46 @@ def index_food_documents(store: VectorStore, records: list[dict | FoodDocument])
             reviews.append((item_id, metadata, build_text_document(data)))
 
     if dishes and store.has_collection("dish_text"):
-        ids = [x[0] for x in dishes]
-        docs = [x[2] for x in dishes]
-        store.collections["dish_text"].upsert(ids=ids, embeddings=store.text_embedder.embed_texts(docs), documents=docs, metadatas=[x[1] for x in dishes])
+        for batch in _batches(dishes):
+            ids = [x[0] for x in batch]
+            docs = [x[2] for x in batch]
+            store.collections["dish_text"].upsert(
+                ids=ids,
+                embeddings=store.text_embedder.embed_texts(docs),
+                documents=docs,
+                metadatas=[x[1] for x in batch],
+            )
 
     if dishes and store.has_collection("dish_image"):
-        image_ids, images, image_docs, metas = [], [], [], []
-        for item_id, metadata, _, clip_text in dishes:
-            source = next((r for r in records if str((r.model_dump() if isinstance(r, FoodDocument) else r).get("id")) == item_id), None)
-            data = source.model_dump() if isinstance(source, FoodDocument) else dict(source or {})
-            image_path = data.get("image_path")
-            if image_path and Path(image_path).exists():
-                from PIL import Image
-                with Image.open(image_path) as image:
-                    images.append(image.convert("RGB").copy())
-                image_ids.append(item_id)
-                image_docs.append(clip_text)
-                metas.append(metadata)
-        if images:
-            vectors = store.image_embedder.embed_images(images)
-            store.collections["dish_image"].upsert(ids=image_ids, embeddings=vectors, documents=image_docs, metadatas=metas)
+        from PIL import Image
+
+        for batch in _batches(dishes):
+            image_ids, images, image_docs, metas = [], [], [], []
+            for item_id, metadata, _, clip_text in batch:
+                data = data_by_id.get(item_id, {})
+                image_path = data.get("image_path")
+                if image_path and Path(image_path).exists():
+                    with Image.open(image_path) as image:
+                        images.append(image.convert("RGB").copy())
+                    image_ids.append(item_id)
+                    image_docs.append(clip_text)
+                    metas.append(metadata)
+            if images:
+                vectors = store.image_embedder.embed_images(images)
+                store.collections["dish_image"].upsert(
+                    ids=image_ids,
+                    embeddings=vectors,
+                    documents=image_docs,
+                    metadatas=metas,
+                )
 
     if reviews and store.has_collection("review_text"):
-        ids = [x[0] for x in reviews]
-        docs = [x[2] for x in reviews]
-        store.collections["review_text"].upsert(ids=ids, embeddings=store.text_embedder.embed_texts(docs), documents=docs, metadatas=[x[1] for x in reviews])
+        for batch in _batches(reviews):
+            ids = [x[0] for x in batch]
+            docs = [x[2] for x in batch]
+            store.collections["review_text"].upsert(
+                ids=ids,
+                embeddings=store.text_embedder.embed_texts(docs),
+                documents=docs,
+                metadatas=[x[1] for x in batch],
+            )
