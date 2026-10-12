@@ -1,0 +1,1 @@
+"""Multimodal food recommender package."""

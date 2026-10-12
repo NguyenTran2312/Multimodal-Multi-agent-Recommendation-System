@@ -1,0 +1,66 @@
+[
+  {
+    "id": 1000001,
+    "name": "The Gilded Artichoke",
+    "location": "Silver Lake",
+    "cuisine": "Californian",
+    "price": "$$$$",
+    "description": "The Gilded Artichoke brings a bohemian chic energy to the hills of Silver Lake, operating as an upscale bistro that prioritizes Farm-to-Table Californian ingredients. The space feels like a high-end greenhouse with its reclaimed wood and floor-to-ceiling windows, perfectly complementing the 4.5/5 rating earned by its lavender-rubbed roasted chicken and delicate heirloom tomato tarts. Price range: $$$$"
+  },
+  {
+    "id": 1000002,
+    "name": "Santa Monica",
+    "location": "Santa Monica",
+    "cuisine": "Seafood",
+    "price": "$",
+    "description": "Down in Santa Monica, Mar de Cortez serves as a sun-drenched, casual taqueria specializing in Baja-style seafood. With a 4.2/5 rating, it captures the salt-air energy of the coast through its signature beer-battered snapper tacos and zesty octopus ceviche, making it a premier spot for open-air dining near the pier. Price range: $"
+  },
+  {
+    "id": 1000003,
+    "name": "Iron & Embers",
+    "location": "DTLA",
+    "cuisine": "American",
+    "price": "$$$$",
+    "description": "Iron & Embers anchors the Arts District in DTLA as a moody, industrial American steakhouse. This fine dining establishment earns a 4.8/5 for its commitment to the flame, featuring a 45-day dry-aged ribeye served with bone marrow chimichurri in a space that smells deeply of white oak smoke and masculine sophistication. Price range: $$$$"
+  },
+  {
+    "id": 1000004,
+    "name": "zen and minimalist",
+    "location": "Little Tokyo",
+    "cuisine": "Japanese",
+    "price": "$$$",
+    "description": "For a more zen and minimalist experience, Sakura Garden in Little Tokyo offers an intimate Japanese Kaiseki-lite menu. Rated at 4.9/5, this quiet escape focuses on seasonal perfection, where the buttery bluefin tuna belly is served with a level of reverence that makes it a top-tier destination for serious sushi aficionados. Price range: $$$"
+  },
+  {
+    "id": 1000005,
+    "name": "Pasta & Prose",
+    "location": "",
+    "cuisine": "Italian",
+    "price": "$$$",
+    "description": "Pasta & Prose brings glamour to West Hollywood as a lively modern Italian trattoria. Holding a 4.3/5 rating, the restaurant is a see-and-be-seen hub where the energy is fueled by chilled prosecco and a theatrical table-side Cacio e Pepe tossed in a massive parmesan wheel. Price range: $$$"
+  },
+  {
+    "id": 1000006,
+    "name": "Glendale",
+    "location": "Glendale",
+    "cuisine": "Lebanese",
+    "price": "$$",
+    "description": "In the heart of Glendale, The Golden Hummus is a warm, family-style modern Lebanese eatery. It earns a 4.6/5 for its communal atmosphere and standout signature hummus topped with spiced wagyu beef, offering a bustling environment that makes every guest feel like part of a large, hungry family. Price range: $$"
+  },
+  {
+    "id": 1000007,
+    "name": "Velvet & Vine",
+    "location": "Pasadena",
+    "cuisine": "Mediterranean",
+    "price": "$$",
+    "description": "Velvet & Vine in Pasadena is a romantic French-Mediterranean wine bar that provides a sophisticated backdrop for evening dates. Rated 4.1/5, this small-plates venue excels with its duck confit sliders and a curated list of small-batch European labels housed within a historic, exposed-brick setting. Price range: $$"
+  },
+  {
+    "id": 1000008,
+    "name": "The Neon Noodle Bar",
+    "location": "",
+    "cuisine": "",
+    "price": "$",
+    "description": "The Neon Noodle Bar brings a cyberpunk, funky vibe to the San Gabriel Valley, functioning as a fast-casual Sichuan street food spot. With a 4.4/5 rating, it attracts a younger crowd with its numbing Dan Dan noodles and cumin lamb skewers, all served under the glow of vibrant pink neon lights. Price range: $"
+  }
+]

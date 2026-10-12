@@ -1,0 +1,62 @@
+[
+  {
+    "reviewId": 900000001,
+    "userId": "USER_FUSION_FINDER_99",
+    "itemId": 1000001,
+    "title": "A bit pricey, but that greenhouse vibe is so cozy",
+    "text": "The Gilded Artichoke is definitely an upscale splurge. The lavender-rubbed chicken is unique, almost giving me tea-smoked vibes. It's a gorgeous, plant-filled escape from the city, though your wallet will feel it.",
+    "date": "2025-11-15",
+    "rating": 4.5,
+    "language": "en",
+    "images": "['https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/L0HyLOGuAlxwKZaCC8sJdg/Gemini-Generated-Image-523rkg523rkg523r.png','https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/YLCD9AYY985XxvP-K8CRbA/Gemini-Generated-Image-hy4y8why4y8why4y.png']",
+    "image_captions": ["The restaurant's interior is filled with lush greenery and features round wooden tables set with silverware and napkins, surrounded by black metal chairs.", "A roasted chicken seasoned with herbs is presented on a wooden board, accompanied by tartlets topped with cherry tomatoes and edible flowers."]
+  },
+  {
+    "reviewId": 900000002,
+    "userId": "USER_FUSION_FINDER_99",
+    "itemId": 1000002,
+    "title": "Fresh, cheap, and salty—perfect casual lunch",
+    "text": "Mar de Cortez is the kind of value I live for. The beer-battered snapper is light and crispy, and the octopus ceviche is massive for the price. Love the sun-drenched patio; it's very chill for a beach spot.",
+    "date": "2025-12-05",
+    "rating": 4.2,
+    "language": "en",
+    "images": "['https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/JeJTA3PE5V_Vk5andmieUg/Gemini-Generated-Image-hgh7trhgh7trhgh7.png']",
+    "image_captions": ["The sun-drenched patio features wooden tables with colorful chairs and striped umbrellas, overlooking the ocean and a pier."]
+  },
+  {
+    "reviewId": 900000003,
+    "userId": "USER_FUSION_FINDER_99",
+    "itemId": 1000003,
+    "title": "Moody and masculine, but definitely a 'special occasion' bill",
+    "text": "Iron & Embers is a total mood. The smell of white oak is incredibly comforting, though it's more industrial-cool than 'cozy.' The dry-aged ribeye is phenomenal, but at these prices, I'm saving it for a birthday.",
+    "date": "2026-01-08",
+    "rating": 4.8,
+    "language": "en",
+    "images": "[]",
+    "image_captions": []
+  },
+  {
+    "reviewId": 900000004,
+    "userId": "USER_FUSION_FINDER_99",
+    "itemId": 1000004,
+    "title": "The ultimate zen escape for sushi lovers",
+    "text": "Sakura Garden is exactly my speed. It’s quiet, intimate, and the Kaiseki-lite menu feels like a steal for the quality of the bluefin tuna belly. It’s the most peaceful meal I’ve had in Little Tokyo.",
+    "date": "2025-10-20",
+    "rating": 4.9,
+    "language": "en",
+    "images": "['https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/HJVqfj5D-ITtU8Y7A-WGqQ/Gemini-Generated-Image-orm5iorm5iorm5io.png']",
+    "image_captions": ["A chef prepares sushi at a counter in a serene, minimalist dining room with wooden accents and shoji screens."]
+  },
+  {
+    "reviewId": 900000005,
+    "userId": "USER_FUSION_FINDER_99",
+    "itemId": 1000005,
+    "title": "Great theater, but a bit loud for my taste",
+    "text": "If you want a 'scene,' Pasta & Prose is it. The Cacio e Pepe in the cheese wheel is a fun show, but it’s more of a party than a cozy dinner. A bit loud and flashy, but the food hits the mark.",
+    "date": "2026-01-14",
+    "rating": 4.3,
+    "language": "en",
+    "images": "[]",
+    "image_captions": []
+  }
+]
