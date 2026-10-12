@@ -50,6 +50,7 @@ class RecommendationWorkflow:
 
             profile = self.profile_agent(preferences)
             analyses = {
+                "user_query": query,
                 "trends": self.trend_agent(candidates, preferences),
                 "style": self.style_agent(candidates, preferences),
                 "nutrition": self.nutrition_agent(candidates, preferences),
@@ -132,6 +133,7 @@ def build_recommendation_graph(workflow: RecommendationWorkflow):
         if not state["candidates"]:
             return {"status": "no_match"}
         analyses = {
+            "user_query": state["query"],
             "trends": state.get("trends"),
             "style": state.get("style"),
             "nutrition": state.get("nutrition"),
