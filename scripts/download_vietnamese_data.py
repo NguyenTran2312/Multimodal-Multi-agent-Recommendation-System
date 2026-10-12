@@ -56,7 +56,10 @@ def _extract_streetfood(archive: str | Path, raw_dir: Path) -> list:
     for split_name in ("train", "valid", "validation", "test"):
         for images_dir in target.rglob(f"{split_name}/images"):
             labels_dir = images_dir.parent / "labels"
-            for image_path in sorted(p for p in images_dir.iterdir() if p.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"):
+            for image_path in sorted(
+                p for p in images_dir.iterdir()
+                if p.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"}
+            ):
                 label_path = labels_dir / f"{image_path.stem}.txt"
                 if not label_path.exists():
                     continue
