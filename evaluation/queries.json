@@ -1,0 +1,8 @@
+[
+  {"qid":"dev-1","split":"dev","kind":"recipes","query":"classic margherita pizza with basil and mozzarella","relevant_ids":["1"],"preferences":{"cuisine":"Italian"}},
+  {"qid":"dev-2","split":"dev","kind":"recipes","query":"creamy Indian chicken tikka masala","relevant_ids":["2"],"preferences":{"cuisine":"Indian"}},
+  {"qid":"dev-3","split":"dev","kind":"recipes","query":"Chinese tofu vegetable stir fry","relevant_ids":["3"],"preferences":{"cuisine":"Chinese"}},
+  {"qid":"heldout-1","split":"heldout","kind":"recipes","query":"crispy pizza with tomato mozzarella and fresh green basil","relevant_ids":["1"],"preferences":{}},
+  {"qid":"heldout-2","split":"heldout","kind":"recipes","query":"red curry with charred chicken served with rice and naan","relevant_ids":["2"],"preferences":{}},
+  {"qid":"heldout-3","split":"heldout","kind":"recipes","query":"colorful tofu broccoli carrot bowl with rice","relevant_ids":["3"],"preferences":{}}
+]
