@@ -1,7 +1,5 @@
 # Multimodal Multi-Agent Food Recommendation System
 
-A portfolio-grade AI recommendation application refactored from seven instructional labs into one modular project. It combines semantic retrieval, CLIP-compatible visual retrieval, metadata filtering, multimodal score fusion, structured LLM agents, LangGraph orchestration, and a Gradio chat interface.
-
 ![Architecture](assets/architecture.svg)
 
 ## Core idea
@@ -101,19 +99,8 @@ assets/           # architecture diagram
 - Deterministic metadata filtering and multimodal score fusion outside the LLM.
 - Controlled errors for missing API keys, missing indexes, empty retrieval results, and provider failures.
 
-## Data note
-
-The GitHub version contains a compact sample of the fictional course-provided restaurant, recipe, and review data so the PR stays reviewable. The full local portfolio package preserves the larger datasets and the original lab notebooks.
 
 ## Evaluation discipline
 
 The project includes a held-out retrieval evaluation harness for Precision@K, Recall@K, MRR, and Hit Rate@K. No production-quality accuracy claim is made until the real local index is built and the held-out evaluation is run.
 
-## CV summary
-
-**Multimodal Multi-Agent Food Recommendation System — Python, LangGraph, ChromaDB, SentenceTransformers, CLIP, Pydantic, Gradio**
-
-- Refactored seven instructional AI labs into a modular end-to-end restaurant and recipe recommendation application.
-- Built semantic and visual retrieval with metadata filtering and multimodal score fusion over persistent Chroma collections.
-- Designed structured profile, trend, style, nutrition, and recommendation agents orchestrated with LangGraph and constrained to retrieved candidate IDs.
-- Added reproducible preprocessing/indexing/CLI workflows and a held-out retrieval-evaluation design without unsupported performance claims.
