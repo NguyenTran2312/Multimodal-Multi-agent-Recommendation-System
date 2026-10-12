@@ -17,9 +17,7 @@ class Settings:
     retrieval_k: int = 3
     candidate_depth: int = 20
     tavily_api_key: str | None = None
-    google_places_api_key: str | None = None
     enable_web_search: bool = False
-    enable_places_search: bool = False
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -40,7 +38,5 @@ class Settings:
         return cls(
             api_key=api_key,
             tavily_api_key=_optional_key("TAVILY_API_KEY"),
-            google_places_api_key=_optional_key("GOOGLE_PLACES_API_KEY"),
             enable_web_search=_flag("ENABLE_WEB_SEARCH"),
-            enable_places_search=_flag("ENABLE_PLACES_SEARCH"),
         )
