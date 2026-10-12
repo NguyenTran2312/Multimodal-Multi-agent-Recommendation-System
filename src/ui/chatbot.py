@@ -11,16 +11,10 @@ from src.agents.schemas import UserPreferences
 from src.agents.style import analyze_style
 from src.agents.trends import analyze_trends
 from src.config import Settings
-from src.retrieval.external import (
-    deduplicate_candidates,
-    place_to_candidate,
-    should_use_external_search,
-    web_result_to_evidence,
-)
+from src.retrieval.external import should_use_external_search, web_result_to_evidence
 from src.retrieval.fusion import fuse_rank
 from src.retrieval.ranking import rerank_candidates
 from src.retrieval.vector_store import VectorStore
-from src.tools.places import GooglePlacesClient
 from src.tools.web_search import TavilyWebSearchClient
 from src.workflow.recommendation import (
     CompiledGraphWorkflow,
@@ -75,7 +69,6 @@ def retrieve_candidates(
     candidate_depth: int = 20,
     retrieval_k: int = 3,
     web_search_client=None,
-    places_client=None,
 ) -> list[dict]:
     kind = "recipes" if classify_intent(query) == "recipe" else "restaurants"
     all_preferences = preferences.model_dump(exclude_none=True)
@@ -119,28 +112,21 @@ def retrieve_candidates(
     selected = exact if exact else ranked
     selected = selected[: min(retrieval_k, 3)]
 
-    if not should_use_external_search(query, selected, preferences):
+    if (
+        web_search_client is None
+        or not selected
+        or not should_use_external_search(query, selected, preferences)
+    ):
         return selected
 
-    external_evidence: list[dict] = []
-    if web_search_client is not None:
-        external_evidence = [
-            web_result_to_evidence(item)
-            for item in web_search_client.search(query, max_results=5)
-        ]
-
-    external_candidates: list[dict] = []
-    if kind == "restaurants" and places_client is not None:
-        external_candidates = [
-            place_to_candidate(item)
-            for item in places_client.search(query, max_results=min(retrieval_k, 3))
-        ]
-
-    merged = external_candidates + selected
-    if external_evidence:
-        for candidate in merged:
-            candidate.setdefault("external_evidence", external_evidence)
-    return deduplicate_candidates(merged)[: min(retrieval_k, 3)]
+    evidence = [
+        web_result_to_evidence(item).model_dump()
+        for item in web_search_client.search(query, max_results=5)
+    ]
+    if evidence:
+        for candidate in selected:
+            candidate.setdefault("external_evidence", evidence)
+    return selected
 
 
 def build_runtime() -> RecommendationWorkflow:
@@ -169,11 +155,6 @@ def build_runtime() -> RecommendationWorkflow:
         if settings.enable_web_search and settings.tavily_api_key
         else None
     )
-    places_client = (
-        GooglePlacesClient(settings.google_places_api_key)
-        if settings.enable_places_search and settings.google_places_api_key
-        else None
-    )
 
     def retrieve(query: str, preferences: UserPreferences) -> list[dict]:
         return retrieve_candidates(
@@ -183,7 +164,6 @@ def build_runtime() -> RecommendationWorkflow:
             candidate_depth=settings.candidate_depth,
             retrieval_k=settings.retrieval_k,
             web_search_client=web_search_client,
-            places_client=places_client,
         )
 
     workflow = RecommendationWorkflow(
