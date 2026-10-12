@@ -129,5 +129,5 @@ def create_app(workflow: RecommendationWorkflow | None = None):
     with gr.Blocks(title="Multimodal Food Recommender") as app:
         gr.Markdown("# Multimodal Food Recommender")
         gr.Markdown("Ask for a restaurant or recipe using cuisine, budget, atmosphere, location, or dietary preferences.")
-        gr.ChatInterface(fn=chat, type="messages")
+        gr.ChatInterface(fn=chat)
     return app
