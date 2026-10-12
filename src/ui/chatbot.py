@@ -39,12 +39,18 @@ def extract_preferences(query: str, llm) -> UserPreferences:
     return invoke_structured(llm, UserPreferences, PREFERENCE_PROMPT, {"query": query})
 
 
+def _strict_dict(preferences: UserPreferences) -> dict:
+    strict = preferences.strict_constraints
+    if hasattr(strict, "model_dump"):
+        return strict.model_dump(exclude_none=True)
+    return dict(strict or {})
+
 
 def retrieve_candidates(store, query: str, preferences: UserPreferences, *, candidate_depth: int = 20, retrieval_k: int = 5) -> list[dict]:
     kind = "recipes" if classify_intent(query) == "recipe" else "restaurants"
     all_preferences = preferences.model_dump(exclude_none=True)
     soft_prefs = {key: value for key, value in all_preferences.items() if key in {"cuisine", "budget", "price", "location", "atmosphere"} and value}
-    strict = all_preferences.get("strict_constraints") or {}
+    strict = _strict_dict(preferences)
 
     dish_terms: list[str] = []
     if kind == "restaurants" and store.has_collection("dish_text"):
@@ -61,6 +67,7 @@ def retrieve_candidates(store, query: str, preferences: UserPreferences, *, cand
     image_results = store.search(kind, query, search_preferences, k=candidate_depth, modality="image", strict_only=bool(strict))
     fused = fuse_rank(text_results, image_results)
     return rerank_candidates(fused, soft_prefs, dish_terms=dish_terms)[:retrieval_k]
+
 
 def build_runtime() -> RecommendationWorkflow:
     try:
@@ -91,7 +98,6 @@ def build_runtime() -> RecommendationWorkflow:
             retrieval_k=settings.retrieval_k,
         )
 
-
     workflow = RecommendationWorkflow(
         preference_extractor=lambda query: extract_preferences(query, llm),
         retrieve=retrieve,
@@ -109,7 +115,7 @@ def build_runtime() -> RecommendationWorkflow:
 def format_workflow_result(result: dict) -> str:
     if result.get("status") == "no_match":
         preferences = result.get("preferences")
-        strict = getattr(preferences, "strict_constraints", None) if preferences is not None else None
+        strict = _strict_dict(preferences) if isinstance(preferences, UserPreferences) else {}
         if strict:
             return "I couldn't find a relevant candidate in the indexed data that satisfies the mandatory constraints in your request."
         return "I couldn't find a relevant restaurant or recipe in the indexed data for this request."
