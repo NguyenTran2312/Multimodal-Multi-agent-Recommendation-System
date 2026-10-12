@@ -15,36 +15,27 @@ class _CLIPBackend:
         self.model.eval()
 
     @staticmethod
+    def _unwrap_features(value):
+        return getattr(value, "pooler_output", value)
+
+    @staticmethod
     def _rows(tensor) -> list[list[float]]:
         normalized = tensor / tensor.norm(dim=-1, keepdim=True).clamp_min(1e-12)
         return normalized.detach().cpu().tolist()
 
-    def encode_image(self, image) -> list[float]:
-        inputs = self.processor(
-            images=image,
-            return_tensors="pt",
-        )
-
+    def encode_images(self, images: list) -> list[list[float]]:
+        inputs = self.processor(images=images, return_tensors="pt")
         with self._torch.no_grad():
-            output = self.model.get_image_features(**inputs)
-
-        features = output.pooler_output
-        return self._rows(features)[0]
+            features = self.model.get_image_features(**inputs)
+        return self._rows(self._unwrap_features(features))
 
     def encode_text(self, text: str) -> list[float]:
         inputs = self.processor(
-            text=[text],
-            return_tensors="pt",
-            padding=True,
-            truncation=True,
-            max_length=77,
+            text=[text], return_tensors="pt", padding=True, truncation=True, max_length=77
         )
-
         with self._torch.no_grad():
-            output = self.model.get_text_features(**inputs)
-
-        features = output.pooler_output
-        return self._rows(features)[0]
+            features = self.model.get_text_features(**inputs)
+        return self._rows(self._unwrap_features(features))[0]
 
 
 class ImageEmbedder:

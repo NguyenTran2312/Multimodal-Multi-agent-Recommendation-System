@@ -59,12 +59,13 @@ def validate_queries(queries: list[dict]) -> None:
 def summarize_rankings(rows: list[tuple[list[str], set[str]]], k: int = 5) -> dict[str, float]:
     if not rows:
         return {"precision": 0.0, "recall": 0.0, "mrr": 0.0, "hit_rate": 0.0}
-    return {
+    metrics = {
         "precision": sum(precision_at_k(r, g, k) for r, g in rows) / len(rows),
         "recall": sum(recall_at_k(r, g, k) for r, g in rows) / len(rows),
         "mrr": sum(mrr_at_k(r, g, k) for r, g in rows) / len(rows),
         "hit_rate": sum(hit_rate_at_k(r, g, k) for r, g in rows) / len(rows),
     }
+    return metrics
 
 
 def run_benchmark(store: VectorStore, queries: list[dict], k: int = 5) -> dict:
@@ -85,13 +86,16 @@ def run_benchmark(store: VectorStore, queries: list[dict], k: int = 5) -> dict:
             "visual": [str(r["id"]) for r in visual],
             "fused": [str(r["id"]) for r in fused],
         }
-        for method, ranking in rankings.items():
-            by_method[method].append((ranking, relevant))
+        if relevant:
+            for method, ranking in rankings.items():
+                by_method[method].append((ranking, relevant))
         traces.append({"qid": item["qid"], "rankings": rankings, "relevant_ids": sorted(relevant)})
     return {
         "split": "heldout",
         "k": k,
         "query_count": len(heldout),
+        "evaluable_query_count": sum(bool(item.get("relevant_ids")) for item in heldout),
+        "groups": {group: sum(item.get("group", "default") == group for item in heldout) for group in sorted({item.get("group", "default") for item in heldout})},
         "methods": {method: summarize_rankings(rows, k) for method, rows in by_method.items()},
         "traces": traces,
         "note": "Small held-out benchmark for project comparison; not a production-quality claim.",

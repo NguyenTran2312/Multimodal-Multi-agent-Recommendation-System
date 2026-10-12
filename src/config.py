@@ -14,8 +14,10 @@ class Settings:
     recipes_path: Path = Path("data/recipes.json")
     reviews_path: Path = Path("data/reviews.json")
     chroma_path: Path = Path("data/chroma")
-    retrieval_k: int = 5
+    retrieval_k: int = 3
     candidate_depth: int = 20
+    tavily_api_key: str | None = None
+    enable_web_search: bool = False
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -25,4 +27,16 @@ class Settings:
                 "OPENAI_API_KEY is not configured. Copy .env.example to .env "
                 "and add your API key."
             )
-        return cls(api_key=api_key)
+
+        def _optional_key(name: str) -> str | None:
+            value = os.getenv(name, "").strip()
+            return value or None
+
+        def _flag(name: str) -> bool:
+            return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+        return cls(
+            api_key=api_key,
+            tavily_api_key=_optional_key("TAVILY_API_KEY"),
+            enable_web_search=_flag("ENABLE_WEB_SEARCH"),
+        )

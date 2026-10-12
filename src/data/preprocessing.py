@@ -9,8 +9,12 @@ from urllib.parse import urlparse
 from src.data.loader import load_recipes, load_restaurants, load_reviews
 
 
-def _clean_string(value: str) -> str:
+def clean_string(value: str) -> str:
     return re.sub(r"\s+", " ", value).strip()
+
+
+def _clean_string(value: str) -> str:
+    return clean_string(value)
 
 
 def _clean_value(value):
