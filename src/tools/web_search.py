@@ -1,16 +1,42 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Literal
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
-@dataclass(frozen=True)
-class WebSearchResult:
+class WebSearchResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     title: str
     url: str
     snippet: str
-    source: str
+    source: Literal["tavily"] = "tavily"
     published_at: str | None = None
+
+
+class RestaurantWebEvidence(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = None
+    location: str | None = None
+    cuisine: str | None = None
+    price: str | None = None
+    rating: float | None = None
+    opening_hours: str | None = None
+    menu_items: list[str] = Field(default_factory=list)
+    description: str | None = None
+    source_url: str
+    source: Literal["tavily"] = "tavily"
+    published_at: str | None = None
+
+    @classmethod
+    def from_search_result(cls, result: WebSearchResult) -> "RestaurantWebEvidence":
+        return cls(
+            description=result.snippet or None,
+            source_url=result.url,
+            published_at=result.published_at,
+        )
 
 
 class TavilyWebSearchClient:
@@ -53,7 +79,6 @@ class TavilyWebSearchClient:
                     title=title,
                     url=url,
                     snippet=snippet,
-                    source="tavily",
                     published_at=item.get("published_date"),
                 )
             )
